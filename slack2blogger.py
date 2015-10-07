@@ -22,23 +22,35 @@ class User:
         self.name = name
         self.img = img
 
-def create_uesr_dict(user_list):
+def create_user_dict(user_list):
     result = {}
     for u in user_list.members:
         result[u.id] = User(u.name, u.profile.image_48) 
     return result
 
-users = g('users.list', pretty=1)
-user_dict = create_uesr_dict(users)
+def create_channel_dict(channel_list):
+    result = {}
+    for c in channel_list.channels:
+        result[c.name] = c.id
+    return result
 
-print users.members[14]
+user_list = g('users.list', pretty=1)
+user_dict = create_user_dict(user_list)
 
-channels = g('channels.list')
+channel_list = g('channels.list')
+channel_dict = create_channel_dict(channel_list)
 
-print channels.channels[0].id
-print channels.channels[0].name
+print 'Uesr list'
+for k, v in user_dict.iteritems():
+    print '    %20s %20s' % (k, v.name)
+print ''
 
-h = g('channels.history', channel='C0BUQESCT', count=5)
+print 'Channel list'
+for k, v in channel_dict.iteritems():
+    print '    %20s %20s' % (k, v)
+print ''
+
+h = g('channels.history', channel=channel_dict['general'], count=50)
 
 for m in h.messages:
     print user_dict[m.user].name, ':', m.text
