@@ -1,0 +1,48 @@
+* {
+    font-family: Slack-Lato,appleLogo,sans-serif;
+}
+
+h1 {
+    background-color: #888
+}
+
+h2 {
+    background-color: #bbb
+}
+
+a {
+    color: #2a80b9;
+    text-decoration: none;
+}
+
+.user-message {
+    border-bottom: 1px solid #ddd;
+}
+
+.tag-user {
+    background-color: #ff7;
+    color: #77f;
+    display: inline;
+}
+
+.user-system-notify {
+    color: #999;
+}
+
+.user-name {
+    display: inline;
+}
+
+.time-stamp {
+    display: inline;
+    font-family: "Helvetica Neue",Helvetica,"Segoe UI",Tahoma,Arial,sans-serif;
+    font-size: 0.5pc;
+    color: #888;
+}
+
+.user-image {
+    display: inline;
+    width: 36px;
+    height: 36px;
+    border-radius: .2rem;
+}
