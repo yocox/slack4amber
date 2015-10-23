@@ -1,3 +1,4 @@
+import re
 import urllib.request
 import urllib.parse
 #import urllib
@@ -7,6 +8,8 @@ from collections import namedtuple
 
 
 SLACK_TOKEN = 'xoxp-11979191639-11979191655-11999522372-47a2833f03'
+URL_PATTERN = re.compile('<(https?://.*?)>')
+USER_NAME_ID_PATTERN = re.compile('<.*?\|.*?>(.*)')
 
 def _json_object_hook(d): return namedtuple('X', d.keys())(*d.values())
 def json2obj(data): return json.loads(data, object_hook=_json_object_hook)
@@ -54,6 +57,9 @@ def get_channel_dict():
 
 channel_id_name_dict = get_channel_dict()
 user_id_name_dict = get_user_dict()
+user_tag_raw_txt_map = {}
+for k, v in user_id_name_dict.items():
+    user_tag_raw_txt_map['<@%s>' % k] = '<div class="tag-user">@%s</div>' % v.name
 
 def get_one_day_one_channel(year, month, day, channel):
     date = datetime.date(year, month, day)
@@ -80,6 +86,7 @@ def get_one_day_one_channel(year, month, day, channel):
     return message_list
 
 def get_one_day(year, month, day, channel_list):
+    return json.loads(open('%04d-%02d-%02d.txt' % (year, month, day), encoding='utf-8').read())
     result = {}
     for channel in channel_list:
         m_list = get_one_day_one_channel(year, month, day, channel)
@@ -87,20 +94,42 @@ def get_one_day(year, month, day, channel_list):
     return result
 
 def get_and_write_one_day_json(year, month, day):
+    global user_id_name_dict
+    global channel_id_name_dict
+
     print('Retrieving %04d/%02d/%02d' % (year, month, day))
-    channel_id_name_dict = get_channel_dict()
     channel_list = channel_id_name_dict.keys()
     channel_messages_dict = get_one_day(year, month, day, channel_list)
     json_str = json.dumps(channel_messages_dict, ensure_ascii=False, indent=2)
-    fout = open('%d-%d-%d.txt' % (year, month, day), 'w', encoding='utf-8')
+    fout = open('%04d-%02d-%02d.txt' % (year, month, day), 'w', encoding='utf-8')
     fout.write(json_str)
     fout.close()
+
+def format_msg_string(msg_txt):
+    global user_tag_raw_txt_map
+    for user_tag_raw_txt in user_tag_raw_txt_map:
+        msg_txt = msg_txt.replace(user_tag_raw_txt, user_tag_raw_txt_map[user_tag_raw_txt])
+
+    msg_txt = URL_PATTERN.sub('<a class="text-hyperlink" target="_blank" href="\\1">\\1</a>', msg_txt)
+    msg_txt = USER_NAME_ID_PATTERN.sub('<div class="user-system-notify">\\1</div>', msg_txt)
+
+    msg_txt = msg_txt.replace('\n', '<br>')
+    return msg_txt
 
 def convert_one_day_to_html(channel_messages_dict, year, month, day):
     global user_id_name_dict
     global channel_id_name_dict
 
-    html = '<h1>%04d-%02d-%02d</h1>\n' % (year, month, day)
+    html ="""<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Sample document</title>
+  <link rel="stylesheet" href="slack.css">
+</head>
+<body>
+"""
+
+    html += '<h1>%04d-%02d-%02d</h1>\n' % (year, month, day)
     for cid, messages in channel_messages_dict.items():
         html += '<h2>'
         html += channel_id_name_dict[cid]
@@ -111,24 +140,23 @@ def convert_one_day_to_html(channel_messages_dict, year, month, day):
 
             user_name = user_id_name_dict[msg['user']].name
             user_image = user_id_name_dict[msg['user']].img
-            msg_txt = msg['text']
+            msg_txt = format_msg_string(msg['text'])
             time_txt = datetime.datetime.fromtimestamp(float(msg['ts'])).strftime('%Y-%m-%d %H:%M:%S')
 
-            html += '    <div class="user-image">' + user_image + '</div>\n'
+            html += '    <img class="user-image" src="' + user_image + '"/>\n'
             html += '    <div class="user-name">' + user_name + '</div>\n'
             html += '    <div class="time-stamp">' + time_txt + '</div>\n'
             html += '    <div class="messsage-text">' + msg_txt + '</div>\n'
 
             html += '</div>\n'
 
+    html += "</body>\n</html>"
     return html
-    fout = open('%d-%d-%d.html' % (year, month, day), 'w', encoding='utf-8')
-    fout.write(html)
-    fout.close()
 
 def get_and_write_one_day_html(year, month, day):
+    global channel_id_name_dict
+
     print('Retrieving %04d/%02d/%02d' % (year, month, day))
-    channel_id_name_dict = get_channel_dict()
     channel_list = channel_id_name_dict.keys()
     channel_messages_dict = get_one_day(year, month, day, channel_list)
     html_str = convert_one_day_to_html(channel_messages_dict, year, month, day)
@@ -138,5 +166,5 @@ def get_and_write_one_day_html(year, month, day):
 
 get_and_write_one_day_html(2015, 10, 17)
 
-#get_and_write_one_day(2015, 10, 22)
+#get_and_write_one_day_json(2015, 10, 17)
 
