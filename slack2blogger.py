@@ -120,6 +120,9 @@ def convert_one_day_to_html(channel_messages_dict, year, month, day):
     global user_id_name_dict
     global channel_id_name_dict
 
+    channel_name_id_list = [(cobj, cid) for cid, cobj in channel_id_name_dict.items()]
+    channel_name_id_list.sort()
+
     html ="""<html>
 <head>
   <meta charset="UTF-8">
@@ -130,12 +133,13 @@ def convert_one_day_to_html(channel_messages_dict, year, month, day):
 """
 
     html += '<h1>%04d-%02d-%02d</h1>\n' % (year, month, day)
-    for cid, messages in channel_messages_dict.items():
+    for channel_name, cid in channel_name_id_list:
         html += '<h2>'
         html += channel_id_name_dict[cid]
         html += '</h2>\n\n'
 
-        for msg in messages:
+        messages = channel_messages_dict[cid]
+        for msg in reversed(messages):
             html += '<div class="user-message">\n'
 
             user_name = user_id_name_dict[msg['user']].name
