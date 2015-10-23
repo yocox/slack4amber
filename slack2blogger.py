@@ -35,10 +35,10 @@ def get_user_dict():
     a dict {'user_id': 'user_name', ...}
     like   {'U282834': 'amber', ...}
     """
-    user_list = g('users.list', pretty=1)    
-    result = {}
+    user_list = g('users.list', pretty=1)
+    result = {'USLACKBOT': User('slackbot', 'https://slack.global.ssl.fastly.net/66f9/img/slackbot_48.png')}
     for u in user_list.members:
-        result[u.id] = User(u.name, u.profile.image_48) 
+        result[u.id] = User(u.name, u.profile.image_48)
     return result
 
 def get_channel_dict():
@@ -51,6 +51,9 @@ def get_channel_dict():
     for c in channel_list.channels:
         result[c.id] = c.name
     return result
+
+channel_id_name_dict = get_channel_dict()
+user_id_name_dict = get_user_dict()
 
 def get_one_day_one_channel(year, month, day, channel):
     date = datetime.date(year, month, day)
@@ -67,7 +70,7 @@ def get_one_day_one_channel(year, month, day, channel):
                  inclusive=0)
 
         message_list.extend(hist['messages'])
-        
+
         if hist['has_more']:
             max_ts = float(hist['messages'][-1]['ts'])
         else:
@@ -83,15 +86,57 @@ def get_one_day(year, month, day, channel_list):
         result[channel] = m_list
     return result
 
-def get_and_write_one_day(year, month, day):
+def get_and_write_one_day_json(year, month, day):
+    print('Retrieving %04d/%02d/%02d' % (year, month, day))
     channel_id_name_dict = get_channel_dict()
     channel_list = channel_id_name_dict.keys()
-    fout = open('%d-%d-%d.txt' % (year, month, day), 'w', encoding='utf-8')
     channel_messages_dict = get_one_day(year, month, day, channel_list)
     json_str = json.dumps(channel_messages_dict, ensure_ascii=False, indent=2)
+    fout = open('%d-%d-%d.txt' % (year, month, day), 'w', encoding='utf-8')
     fout.write(json_str)
     fout.close()
 
-user_id_name_dict = get_user_dict()
+def convert_one_day_to_html(channel_messages_dict, year, month, day):
+    global user_id_name_dict
+    global channel_id_name_dict
 
-get_and_write_one_day(2015, 10, 6)
+    html = '<h1>%04d-%02d-%02d</h1>\n' % (year, month, day)
+    for cid, messages in channel_messages_dict.items():
+        html += '<h2>'
+        html += channel_id_name_dict[cid]
+        html += '</h2>\n\n'
+
+        for msg in messages:
+            html += '<div class="user-message">\n'
+
+            user_name = user_id_name_dict[msg['user']].name
+            user_image = user_id_name_dict[msg['user']].img
+            msg_txt = msg['text']
+            time_txt = datetime.datetime.fromtimestamp(float(msg['ts'])).strftime('%Y-%m-%d %H:%M:%S')
+
+            html += '    <div class="user-image">' + user_image + '</div>\n'
+            html += '    <div class="user-name">' + user_name + '</div>\n'
+            html += '    <div class="time-stamp">' + time_txt + '</div>\n'
+            html += '    <div class="messsage-text">' + msg_txt + '</div>\n'
+
+            html += '</div>\n'
+
+    return html
+    fout = open('%d-%d-%d.html' % (year, month, day), 'w', encoding='utf-8')
+    fout.write(html)
+    fout.close()
+
+def get_and_write_one_day_html(year, month, day):
+    print('Retrieving %04d/%02d/%02d' % (year, month, day))
+    channel_id_name_dict = get_channel_dict()
+    channel_list = channel_id_name_dict.keys()
+    channel_messages_dict = get_one_day(year, month, day, channel_list)
+    html_str = convert_one_day_to_html(channel_messages_dict, year, month, day)
+    fout = open('%d-%d-%d.html' % (year, month, day), 'w', encoding='utf-8')
+    fout.write(html_str)
+    fout.close()
+
+get_and_write_one_day_html(2015, 10, 17)
+
+#get_and_write_one_day(2015, 10, 22)
+
