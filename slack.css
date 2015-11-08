@@ -3,11 +3,15 @@
 }
 
 h1 {
-    background-color: #888
+    background-color: #ecc;
+    border-radius: 8px;
+    padding: 10px 10px;
 }
 
 h2 {
-    background-color: #bbb
+    background-color: #cce;
+    border-radius: 5px;
+    padding: 3px 10px;
 }
 
 a {
@@ -16,13 +20,20 @@ a {
 }
 
 .user-message {
-    border-bottom: 1px solid #ddd;
+    font-family: Slack-Lato,appleLogo,sans-serif;
+    font-size: 15;
+    line-height: 22px;
+    -webkit-font-smoothing: antialiased;
 }
 
-.tag-user {
-    background-color: #ff7;
-    color: #77f;
+.user-message + .user-message {
+    margin-top: 20px;
+}
+
+.tag-user .text-hyperlink {
+    color: #2a80b9;
     display: inline;
+    font-family: Slack-Lato,appleLogo,sans-serif;
 }
 
 .user-system-notify {
@@ -31,6 +42,10 @@ a {
 
 .user-name {
     display: inline;
+    font-weight: 700;
+    font-style: normal;
+    font-size: 15;
+    font-family: Slack-Lato,appleLogo,sans-serif;
 }
 
 .time-stamp {
@@ -45,4 +60,6 @@ a {
     width: 36px;
     height: 36px;
     border-radius: .2rem;
+    float: left;
+    margin-right: 5px;
 }
